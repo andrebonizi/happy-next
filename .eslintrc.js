@@ -8,6 +8,7 @@ module.exports = {
     'plugin:prettier/recommended',
   ],
   rules: {
+    'no-case-declarations': 'off',
     'no-unused-expressions': 'off',
     '@typescript-eslint/no-unused-expressions': 0,
     'react/prop-types': 'warn',

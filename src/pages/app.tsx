@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiArrowRight } from 'react-icons/fi';
 import styled from 'styled-components';
-import { MapProps } from 'react-leaflet';
+import { Map, TileLayer, Popup, Marker } from '../components/dynamicLeaflet';
 import 'leaflet/dist/leaflet.css';
-import dynamic from 'next/dynamic';
 
 const Container = styled.div`
   width: 100vw;
@@ -46,18 +45,39 @@ const Aside = styled.aside`
   }
 `;
 
-const DynamicMap = dynamic<any>(() => import('react-leaflet').then((leaflet) => leaflet.Map), {
-  ssr: false,
-});
-
-const DynamicTileLayer = dynamic<any>(
-  () => import('react-leaflet').then((leaflet) => leaflet.TileLayer),
-  {
-    ssr: false,
+const StyledPopup = styled(Popup)`
+  & .leaflet-popup-content-wrapper {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
   }
-);
 
-const StyledMap = styled(DynamicMap)<MapProps>`
+  & .leaflet-popup-content {
+    color: #0089a5;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    & a {
+      width: 40px;
+      height: 40px;
+      background: #15c3d6;
+      box-shadow: 17.2868px 27.6589px 41.4884px rgba(23, 142, 166, 0.16);
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  & .leaflet-popup-tip-container {
+    display: none;
+  }
+`;
+
+const StyledMap = styled(Map)`
   width: 100%;
   height: 100%;
 
@@ -102,10 +122,28 @@ export default function App() {
         </footer>
       </Aside>
       <StyledMap center={[-23.6821604, -46.8754915]} zoom={15}>
-        <DynamicTileLayer url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"></DynamicTileLayer>
+        <TileLayer></TileLayer>
+        <Marker
+          iconProps={{
+            iconUrl: 'img/Marker.svg',
+            iconSize: [58, 68],
+            iconAnchor: [29, 68],
+            popupAnchor: [170, 2],
+          }}
+          position={[-23.6821604, -46.8754915]}
+        >
+          <StyledPopup closeButton={false} minWidth={240} maxWidth={240}>
+            Lar das Meninas
+            <Link href="/orphanage/1">
+              <a>
+                <FiArrowRight size={20} color="#FFF" />
+              </a>
+            </Link>
+          </StyledPopup>
+        </Marker>
       </StyledMap>
 
-      <Link href="">
+      <Link href="/orphanage/create">
         <Button>
           <FiPlus size={32} color="#FFF" />
         </Button>
