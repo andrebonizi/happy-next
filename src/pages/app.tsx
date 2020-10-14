@@ -3,6 +3,12 @@ import { FiPlus, FiArrowRight } from 'react-icons/fi';
 import styled from 'styled-components';
 import { Map, TileLayer, Popup, Marker } from '../components/dynamicLeaflet';
 import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
+import { api } from 'src/services/api';
+import { Orphanage } from '@models/orphanage';
+import { getRepository } from 'fireorm';
+import { GetStaticProps } from 'next';
+import { OrphanagesView } from 'src/views/orphanages';
 
 const Container = styled.div`
   width: 100vw;
@@ -107,7 +113,19 @@ const Button = styled.a`
   }
 `;
 
-export default function App() {
+interface AppProps {
+  orphanages: Orphanage[];
+}
+
+export default function App(props: AppProps) {
+  // const [orphanages, setOrphanages] = useState<Orphanage[]>([]);
+
+  // useEffect(() => {
+  //   api.get<Orphanage[]>('orphanages').then((response) => {
+  //     setOrphanages(response.data);
+  //   });
+  // }, []);
+
   return (
     <Container>
       <Aside>
@@ -123,24 +141,29 @@ export default function App() {
       </Aside>
       <StyledMap center={[-23.6821604, -46.8754915]} zoom={15}>
         <TileLayer></TileLayer>
-        <Marker
-          iconProps={{
-            iconUrl: 'img/Marker.svg',
-            iconSize: [58, 68],
-            iconAnchor: [29, 68],
-            popupAnchor: [170, 2],
-          }}
-          position={[-23.6821604, -46.8754915]}
-        >
-          <StyledPopup closeButton={false} minWidth={240} maxWidth={240}>
-            Lar das Meninas
-            <Link href="/orphanage/1">
-              <a>
-                <FiArrowRight size={20} color="#FFF" />
-              </a>
-            </Link>
-          </StyledPopup>
-        </Marker>
+        {props.orphanages.map((orphanage) => {
+          return (
+            <Marker
+              key={orphanage.id}
+              iconProps={{
+                iconUrl: 'img/Marker.svg',
+                iconSize: [58, 68],
+                iconAnchor: [29, 68],
+                popupAnchor: [170, 2],
+              }}
+              position={[orphanage.latitude, orphanage.longitude]}
+            >
+              <StyledPopup closeButton={false} minWidth={240} maxWidth={240}>
+                {orphanage.name}
+                <Link href={`/orphanage/${orphanage.id}`}>
+                  <a>
+                    <FiArrowRight size={20} color="#FFF" />
+                  </a>
+                </Link>
+              </StyledPopup>
+            </Marker>
+          );
+        })}
       </StyledMap>
 
       <Link href="/orphanage/create">
@@ -151,3 +174,15 @@ export default function App() {
     </Container>
   );
 }
+
+export const getStaticProps: GetStaticProps<AppProps> = async () => {
+  const repository = getRepository(Orphanage);
+  const orphanages = await repository.find();
+
+  return {
+    props: {
+      orphanages: OrphanagesView(orphanages),
+    },
+    revalidate: 60,
+  };
+};

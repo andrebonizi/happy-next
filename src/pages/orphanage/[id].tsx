@@ -1,54 +1,21 @@
 import { FaWhatsapp } from 'react-icons/fa';
-import { FiClock, FiInfo, FiArrowLeft } from 'react-icons/fi';
+import { FiClock, FiInfo } from 'react-icons/fi';
 import { Map, Marker, TileLayer } from '../../components/dynamicLeaflet';
 
 import mapMarkerImg from 'public/img/Marker.svg';
 
-import { useRouter } from 'next/dist/client/router';
 import styled from 'styled-components';
+import { Sidebar } from 'src/components/Sidebar';
+import { GetStaticPaths, GetStaticProps } from 'next';
+import { Orphanage } from '@models/orphanage';
+import { getRepository } from 'fireorm';
+import { OrphanageView } from 'src/views/orphanages';
+import { useState } from 'react';
 
 const PageOrphanage = styled.div`
   display: flex;
   min-height: 100vh;
 
-  & aside {
-    position: fixed;
-    height: 100%;
-    padding: 32px 24px;
-    background: linear-gradient(329.54deg, #15b6d6 0%, #15d6d6 100%);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    & img {
-      width: 48px;
-    }
-    & footer {
-      & a,
-      button {
-        width: 48px;
-        height: 48px;
-
-        border: 0;
-
-        background: #12afcb;
-        border-radius: 16px;
-
-        cursor: pointer;
-
-        transition: background-color 0.2s;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        &:hover {
-          background: #17d6eb;
-        }
-      }
-    }
-  }
   & main {
     flex: 1;
   }
@@ -141,6 +108,11 @@ const OrphanageDetails = styled.div`
         border: 1px solid #a1e9c5;
         color: #37c77f;
       }
+      & div.dont-open {
+        background: linear-gradient(154.16deg, #fdf0f5 7.85%, #ffffff 91.03%);
+        border: 1px solid #ffdcd4;
+        color: #ff669d;
+      }
     }
     & .map-container {
       margin-top: 64px;
@@ -184,89 +156,59 @@ const OrphanageDetails = styled.div`
       outline: none;
 
       opacity: 0.6;
-      &:active {
-        opacity: 1;
-      }
+
       & img {
         width: 100%;
         height: 88px;
         object-fit: cover;
       }
     }
+    &button.active {
+      opacity: 1;
+    }
   }
 `;
 
-export default function Orphanage() {
-  const { back } = useRouter();
+interface OrphanagePageProps {
+  orphanage?: Orphanage;
+}
+
+export default function OrphanagePage({ orphanage }: OrphanagePageProps) {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  if (!orphanage) {
+    return <div>404</div>;
+  }
 
   return (
     <PageOrphanage>
-      <aside>
-        <img src={mapMarkerImg} alt="Happy" />
-
-        <footer>
-          <button type="button" onClick={back}>
-            <FiArrowLeft size={24} color="#FFF" />
-          </button>
-        </footer>
-      </aside>
-
+      <Sidebar />
       <main>
         <OrphanageDetails>
-          <img
-            src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-            alt="Lar das meninas"
-          />
+          <img src={orphanage.images[activeImageIndex]} alt={orphanage.name} />
 
           <div className="images">
-            <button className="active" type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
-            <button type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
-            <button type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
-            <button type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
-            <button type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
-            <button type="button">
-              <img
-                src="https://www.gcd.com.br/wp-content/uploads/2020/08/safe_image.jpg"
-                alt="Lar das meninas"
-              />
-            </button>
+            {orphanage.images.map((image, index) => (
+              <button
+                key={orphanage.id}
+                className={activeImageIndex === index ? 'active' : ''}
+                type="button"
+                onClick={() => {
+                  setActiveImageIndex(index);
+                }}
+              >
+                <img src={image} alt={orphanage.name} />
+              </button>
+            ))}
           </div>
 
           <div className="orphanage-details-content">
-            <h1>Lar das meninas</h1>
-            <p>
-              Presta assistência a crianças de 06 a 15 anos que se encontre em situação de risco
-              e/ou vulnerabilidade social.
-            </p>
+            <h1>{orphanage.name}</h1>
+            <p>{orphanage.about}</p>
 
             <div className="map-container">
               <Map
-                center={[-27.2092052, -49.6401092]}
+                center={[orphanage.latitude, orphanage.longitude]}
                 zoom={16}
                 style={{ width: '100%', height: 280 }}
                 dragging={false}
@@ -285,31 +227,45 @@ export default function Orphanage() {
                     iconAnchor: [29, 68],
                     popupAnchor: [0, -60],
                   }}
-                  position={[-27.2092052, -49.6401092]}
+                  position={[orphanage.latitude, orphanage.longitude]}
                 />
               </Map>
 
               <footer>
-                <a href="">Ver rotas no Google Maps</a>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${orphanage.latitude},${orphanage.longitude}`}
+                >
+                  Ver rotas no Google Maps
+                </a>
               </footer>
             </div>
 
             <hr />
 
             <h2>Instruções para visita</h2>
-            <p>Venha como se sentir mais à vontade e traga muito amor para dar.</p>
+            <p>{orphanage.instructions}</p>
 
             <div className="open-details">
               <div className="hour">
                 <FiClock size={32} color="#15B6D6" />
                 Segunda à Sexta <br />
-                8h às 18h
+                {orphanage.openingHours}
               </div>
-              <div className="open-on-weekends">
-                <FiInfo size={32} color="#39CC83" />
-                Atendemos <br />
-                fim de semana
-              </div>
+              {orphanage.openOnWeekends ? (
+                <div className="open-on-weekends">
+                  <FiInfo size={32} color="#39CC83" />
+                  Atendemos <br />
+                  fim de semana
+                </div>
+              ) : (
+                <div className="dont-open">
+                  <FiInfo size={32} color="#FF669D" />
+                  Não atendemos <br />
+                  fim de semana
+                </div>
+              )}
             </div>
 
             <button type="button" className="contact-button">
@@ -322,3 +278,30 @@ export default function Orphanage() {
     </PageOrphanage>
   );
 }
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const repository = getRepository(Orphanage);
+
+  const orphanages = await repository.find();
+  return {
+    paths: orphanages.map((orphanage) => ({
+      params: {
+        id: orphanage.id,
+      },
+    })),
+
+    fallback: true,
+  };
+};
+
+export const getStaticProps: GetStaticProps<OrphanagePageProps> = async (context) => {
+  const repository = getRepository(Orphanage);
+
+  const orphanage = await repository.findById(context.params?.id as string);
+  return {
+    props: {
+      orphanage: orphanage ? OrphanageView(orphanage) : undefined,
+    },
+    revalidate: false,
+  };
+};

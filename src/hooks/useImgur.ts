@@ -15,11 +15,11 @@ export function useImgur() {
       .then((res) => res.data.link);
   }
 
-  async function uploadImages(files: FileList) {
+  async function uploadImages(files: File[]) {
     const links: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
-      const file = files.item(i);
+      const file = files[i];
       if (file) {
         links.push(await uploadImage(file));
       }

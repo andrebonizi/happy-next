@@ -2,8 +2,9 @@
 
 import { getRepository } from 'fireorm';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Orphanage, orphanageValidation } from '@models/orphanage';
+import { Orphanage } from '@models/orphanage';
 import { errorHandler } from 'src/handlers/errorHandler';
+import { orphanageValidation } from 'src/validations/orphanageValidations';
 
 const repository = getRepository(Orphanage);
 

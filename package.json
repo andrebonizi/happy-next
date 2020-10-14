@@ -8,8 +8,10 @@
     "start": "next start"
   },
   "dependencies": {
+    "axios": "^0.20.0",
     "firebase-admin": "^9.2.0",
     "fireorm": "^0.17.1",
+    "formik": "^2.2.0",
     "leaflet": "^1.7.1",
     "next": "9.5.5",
     "react": "16.13.1",
